@@ -1,78 +1,134 @@
 package com.appfrutaria.service;
 
-import com.appfrutaria.model.Fruta;
+import com.appfrutaria.model.*;
 import com.appfrutaria.view.Atendente;
 
 import java.util.List;
 import java.util.ArrayList;
 
 public class Estoque {
-	/*
-	 * Classe estoque, para armazenar e gerenciar os objetos 
-	 */
 	
-	List<Fruta> estoqueFruta;
+	List<Produto> estoqueProduto;
 	
 	public Estoque() {
-		estoqueFruta = new ArrayList<>();
+		estoqueProduto = new ArrayList<>();
 	}
 	
-	public void gerenciarEstoque(int opcaoMenuEscolhida, Atendente atendente) {
-		//método para gerenciar as escolhas do usuário
-		switch(opcaoMenuEscolhida) {
-		case 1 ->{ //cadastro
-			System.out.println(" ");
-			String nomeFruta = atendente.definirNome();
-			String tipoFruta = atendente.definirTipo();
-			double precoFruta = atendente.definirPreco();
-			int quantidadeFruta = atendente.definirQuantidade();
-			System.out.println(" ");
+	public boolean gerenciarEstoque(int opcaoMenuEscolhida, Atendente atendente) {
+		
+		boolean escolha;
+		if(opcaoMenuEscolhida < 0 || opcaoMenuEscolhida > 4) {
+			atendente.opcaoInvalida();
+			escolha = true;
 			
-			Fruta fruta = new Fruta(nomeFruta, tipoFruta, precoFruta, quantidadeFruta);
-			estoqueFruta.add(fruta);
-			//criando um novo objeto e armazenando no ArrayList
-		}
-		case 2 ->{ //listagem
-			int i = 0;
-			for (Fruta fruta : estoqueFruta) {
-				System.out.println(" ");
-				System.out.println("[" + i + "]");
-				atendente.listarFrutas(fruta);
-				System.out.println("----------------------");
-				i++;
-			}
-			i = 0;
-		}	
-		case 3 ->{ //remoção
-			String nome = atendente.removerFruta();
-			boolean removido = false;
-			System.out.println(" ");
-			
-			for(int indice = 0; indice < estoqueFruta.size(); indice++) {
+		} else {
+			escolha = true;
+			switch(opcaoMenuEscolhida) {
+			case 1 ->{
+				int produto = atendente.escolhaProduto();
 				
-				if(estoqueFruta.get(indice).getNome().equalsIgnoreCase(nome)) {
-					estoqueFruta.remove(indice);
-					removido = true;
-					break;
-					//buscando o indice de acordo com o nome inserido e removendo ele
+				String nome = atendente.definirNome();
+				double preco = atendente.definirPreco();
+				int quantidade = atendente.definirQuantidade();
+				
+				switch(produto) {
+				case 1->{
+					double peso = atendente.definirPeso();
+					Produto fruta = new Fruta(nome, preco, quantidade, peso);
+					estoqueProduto.add(fruta);
+				}
+				case 2->{
+					String tipo = atendente.definirTipo();
+					Produto verdura = new Verdura(nome, preco, quantidade, tipo);
+					estoqueProduto.add(verdura);
+				}
 				}
 			}
-			if(removido) {
-				atendente.visualizarFrutaRemovida(nome);
-				System.out.println(" ");
+			case 2 ->{
+				atendente.cabecalho();
 				
-			} else {
-				atendente.frutaNaoEncontrada();
+				if(estoqueProduto.isEmpty()) {
+					atendente.listaVazia();
+				}
+				for(Produto produto : estoqueProduto) {
+					if(produto instanceof Fruta) {
+						atendente.frutas();
+						for (Produto produt : estoqueProduto) {
+							if(produt instanceof Fruta fruta) {
+								atendente.listarProduto(fruta);
+							} 
+						}
+					}
+				}
+				for(Produto produto : estoqueProduto) {
+					if(produto instanceof Verdura) {
+						atendente.verduras();
+						for (Produto produt : estoqueProduto) {
+							if(produt instanceof Verdura verdura) {
+								atendente.listarProduto(verdura);
+							}
+						}
+					}
+				}
+			}	
+			case 3 ->{
+				String nome = atendente.remover();
+				boolean removido = false;
+				
+				for(int indice = 0; indice < estoqueProduto.size(); indice++) {
+					if(estoqueProduto.get(indice).getNome().equalsIgnoreCase(nome)) {
+						estoqueProduto.remove(indice);
+						removido = true;
+						break;
+					}
+				}
+				if(removido) {
+					atendente.removido();
+				} else {
+					atendente.naoEncontrado();
+				}
+			}
+			case 4->{
+				String nome = atendente.pesquisar();
+				boolean encontrado = false;
+				
+				for(Produto produto : estoqueProduto) {
+					if(produto.getNome().equalsIgnoreCase(nome)) {
+						atendente.editando(produto);
+						produto.setNome(atendente.definirNome());
+						produto.setPreco(atendente.definirPreco());
+						produto.setQuantidade(atendente.definirQuantidade());
+						
+						if(produto instanceof Fruta) {
+							((Fruta) produto).setPeso(atendente.definirPeso());
+						} else if(produto instanceof Verdura) {
+							((Verdura) produto).setTipo(atendente.definirTipo());
+						}
+						
+						encontrado = true;
+						break;
+					}
+				}
+				if(encontrado) {
+					atendente.editado();
+				} else {
+					atendente.naoEncontrado();
+				}
+			}
+			case 0 ->{
+				atendente.encerrar();
+				escolha = false;
 			}
 		}
 		}
+		return escolha;
 	}
 	
-	public List<Fruta> getEstoqueFruta(){
-		return estoqueFruta;
+	public List<Produto> getEstoqueProduto(){
+		return estoqueProduto;
 	}
 	
-	public void setEstoqueFrua(List<Fruta> estoqueFruta) {
-		this.estoqueFruta = estoqueFruta;
+	public void setEstoqueFrua(List<Produto> estoqueProduto) {
+		this.estoqueProduto = estoqueProduto;
 	}
 }
